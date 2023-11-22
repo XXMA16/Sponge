@@ -22,29 +22,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.common.advancement.criterion;
+package org.spongepowered.common.mixin.core.advancements;
 
-import net.minecraft.advancements.Criterion;
+import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.advancements.CriterionTrigger;
-import net.minecraft.advancements.CriterionTriggerInstance;
-import org.spongepowered.api.advancement.criteria.AdvancementCriterion;
-import org.spongepowered.common.bridge.advancements.CriterionBridge;
+import net.minecraft.core.Registry;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.common.advancement.criterion.SpongeDummyTrigger;
+import org.spongepowered.common.advancement.criterion.SpongeScoreTrigger;
 
-public class SpongeCriterionBuilder extends AbstractCriterionBuilder<AdvancementCriterion, AdvancementCriterion.Builder>
-        implements AdvancementCriterion.Builder {
 
-    @SuppressWarnings("ConstantConditions")
-    @Override
-    AdvancementCriterion build0() {
-        CriterionTriggerInstance trigger = (CriterionTriggerInstance) this.trigger;
-        CriterionTrigger type = (CriterionTrigger) this.type;
-        if (this.trigger == null) {
-            trigger = SpongeDummyTrigger.TriggerInstance.dummy();
-            type = SpongeDummyTrigger.DUMMY_TRIGGER;
-        }
+@Mixin(CriteriaTriggers.class)
+public abstract class CriteriaTriggersMixin {
 
-        final Criterion<?> criterion = new Criterion<>(type, trigger);
-        ((CriterionBridge) (Object) criterion).bridge$setName(this.name);
-        return (AdvancementCriterion) (Object) criterion;
+    @Inject(method = "bootstrap", at = @At("HEAD"))
+    private static void onBootstrap(final Registry<CriterionTrigger<?>> $$0, final CallbackInfoReturnable<CriterionTrigger<?>> cir)
+    {
+        final var loadMe1 = SpongeDummyTrigger.DUMMY_TRIGGER; // register sponge trigger
+        final var loadMe2 =   SpongeScoreTrigger.SCORE_TRIGGER; // register sponge trigger
     }
 }

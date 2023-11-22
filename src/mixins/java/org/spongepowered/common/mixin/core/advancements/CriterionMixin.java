@@ -67,8 +67,8 @@ public abstract class CriterionMixin implements CriterionBridge {
 
     @Inject(method = "serializeToJson", at = @At("RETURN"))
     private void impl$serializeTriggerTimes(CallbackInfoReturnable<JsonObject> cir) {
-        if (this.triggerInstance instanceof SpongeScoreTrigger.Instance) {
-            cir.getReturnValue().addProperty("trigger_times", ((SpongeScoreTrigger.Instance) this.triggerInstance).getTriggerTimes());
+        if (this.triggerInstance instanceof SpongeScoreTrigger.TriggerInstance) {
+            cir.getReturnValue().addProperty("trigger_times", ((SpongeScoreTrigger.TriggerInstance) this.triggerInstance).getTriggerTimes());
         }
         if (this.impl$scoreCriterion != null) {
             cir.getReturnValue().addProperty("criterion", this.impl$scoreCriterion.name());
