@@ -680,7 +680,7 @@ public abstract class ServerPlayerMixin extends PlayerMixin implements SubjectBr
         // Sponge End
 
         this.shadow$getScoreboard().forAllObjectives(
-                ObjectiveCriteria.DEATH_COUNT, this.shadow$getScoreboardName(), Score::increment);
+                ObjectiveCriteria.DEATH_COUNT, (net.minecraft.server.level.ServerPlayer) (Object) this, sa -> sa.set(sa.get() + 1));
         final LivingEntity livingentity = this.shadow$getKillCredit();
         if (livingentity != null) {
             this.shadow$awardStat(Stats.ENTITY_KILLED_BY.get(livingentity.getType()));

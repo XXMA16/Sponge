@@ -45,15 +45,18 @@ public interface ServerScoreboardBridge {
 
     Optional<Objective> bridge$getObjective(String name);
 
-    void bridge$addObjective(Objective objective);
+    void bridge$addAPIObjective(Objective objective);
 
-    void bridge$updateDisplaySlot(@Nullable Objective objective, DisplaySlot displaySlot) throws IllegalStateException;
+    void bridge$addMCObjective(net.minecraft.world.scores.Objective mcObjective);
+
 
     Optional<Objective> bridge$getObjective(DisplaySlot slot);
 
     Set<Objective> bridge$getObjectivesByCriterion(Criterion criterion);
 
-    void bridge$removeObjective(Objective objective);
+    void bridge$removeAPIObjective(Objective objective);
+
+    void bridge$removeMCObjective(net.minecraft.world.scores.Objective mcObjective);
 
     void bridge$registerTeam(Team spongeTeam);
 

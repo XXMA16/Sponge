@@ -27,6 +27,9 @@ package org.spongepowered.common.scoreboard;
 import com.google.common.collect.Maps;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.minecraft.network.chat.numbers.NumberFormat;
+import net.minecraft.world.scores.ScoreAccess;
+import net.minecraft.world.scores.ScoreHolder;
 import net.minecraft.world.scores.criteria.ObjectiveCriteria;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.scoreboard.Score;
@@ -35,13 +38,10 @@ import org.spongepowered.api.scoreboard.criteria.Criterion;
 import org.spongepowered.api.scoreboard.objective.Objective;
 import org.spongepowered.api.scoreboard.objective.displaymode.ObjectiveDisplayMode;
 import org.spongepowered.api.scoreboard.objective.displaymode.ObjectiveDisplayModes;
-import org.spongepowered.common.accessor.world.scores.ObjectiveAccessor;
-import org.spongepowered.common.accessor.world.scores.ScoreAccessor;
 import org.spongepowered.common.accessor.world.scores.ScoreboardAccessor;
 import org.spongepowered.common.adventure.SpongeAdventure;
 import org.spongepowered.common.bridge.world.scores.ObjectiveBridge;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -55,20 +55,31 @@ public final class SpongeObjective implements Objective {
 
     private final String name;
     private final Criterion criterion;
-    private final Map<Component, Score> scores = new HashMap<>();
-    private final Map<net.minecraft.world.scores.Scoreboard, net.minecraft.world.scores.Objective> objectives;
+    private final Map<String, Score> scores = new HashMap<>();
+    private final Set<net.minecraft.world.scores.Scoreboard> scoreboards = new HashSet<>();
 
     private Component displayName;
     private ObjectiveDisplayMode displayMode;
+    private boolean displayAutoUpdate; // TODO make this do stuff
+    private NumberFormat numberFormat; // TODO make this do stuff
 
     public SpongeObjective(final String name, final Criterion criterion) {
         this.name = name;
         this.displayName = LegacyComponentSerializer.legacySection().deserialize(name);
         this.displayMode = ObjectiveDisplayModes.INTEGER.get();
         this.criterion = criterion;
-
-        this.objectives = new HashMap<>();
     }
+
+    public static SpongeObjective fromVanilla(net.minecraft.world.scores.Objective mcObjective) {
+        final SpongeObjective objective = new SpongeObjective(mcObjective.getName(), (Criterion) mcObjective.getCriteria());
+        objective.setDisplayMode((ObjectiveDisplayMode) (Object) mcObjective.getRenderType());
+        objective.setDisplayName(SpongeAdventure.asAdventure(mcObjective.getDisplayName()));
+        objective.setDisplayAutoUpdate(mcObjective.displayAutoUpdate());
+        objective.setNumberFormat(mcObjective.numberFormat());
+        ((ObjectiveBridge) mcObjective).bridge$setSpongeObjective(objective);
+        return objective;
+    }
+
 
     @Override
     public String name() {
@@ -111,36 +122,40 @@ public final class SpongeObjective implements Objective {
     }
 
     @Override
-    public Map<Component, Score> scores() {
+    public Map<String, Score> scores() {
         return new HashMap<>(this.scores);
     }
 
     @Override
-    public boolean hasScore(final Component name) {
+    public boolean hasScore(final String name) {
         return this.scores.containsKey(name);
     }
 
     @Override
     public void addScore(final Score score) throws IllegalArgumentException {
         if (this.scores.containsKey(score.name())) {
-            throw new IllegalArgumentException(String.format("A score with the name %s already exists!",
-                    LegacyComponentSerializer.legacySection().serialize(score.name())));
+            throw new IllegalArgumentException(String.format("A score with the name %s already exists!", score.name()));
         }
         this.scores.put(score.name(), score);
 
         final SpongeScore spongeScore = (SpongeScore) score;
-        for (final net.minecraft.world.scores.Objective objective: this.objectives.values()) {
-            this.addScoreToScoreboard(((ObjectiveAccessor) objective).accessor$scoreboard(), spongeScore.getScoreFor(objective));
+        for (final net.minecraft.world.scores.Scoreboard scoreboard : this.scoreboards) {
+            final net.minecraft.world.scores.Objective mcObjective = scoreboard.getObjective(this.name);
+            for (final ScoreHolder holder : scoreboard.getTrackedPlayers()) {
+                final ScoreAccess accessor = scoreboard.getOrCreatePlayerScore(holder, mcObjective);
+                spongeScore.registerAndUpdate(mcObjective, accessor);
+                // TODO set values
+            }
         }
     }
 
     @Override
-    public Optional<Score> findScore(final Component name) {
+    public Optional<Score> findScore(final String name) {
         return Optional.ofNullable(this.scores.get(name));
     }
 
     @Override
-    public Score findOrCreateScore(final Component name) {
+    public Score findOrCreateScore(final String name) {
         if (this.scores.containsKey(name)) {
             return this.scores.get(name);
         }
@@ -152,33 +167,16 @@ public final class SpongeObjective implements Objective {
 
     @Override
     public boolean removeScore(final Score spongeScore) {
-        final String name = ((SpongeScore) spongeScore).legacyName;
+        final ScoreHolder holder = ((SpongeScore) spongeScore).holder;
 
         if (!this.scores.containsKey(spongeScore.name())) {
             return false;
         }
 
-        for (final net.minecraft.world.scores.Objective objective: this.objectives.values()) {
-            final net.minecraft.world.scores.Scoreboard scoreboard = ((ObjectiveAccessor) objective).accessor$scoreboard();
-
-
-            final Map<?, ?> map = ((ScoreboardAccessor) scoreboard).accessor$playerScores().get(name);
-
-            if (map != null) {
-                final net.minecraft.world.scores.Score score = (net.minecraft.world.scores.Score) map.remove(objective);
-
-
-                if (map.size() < 1) {
-                    final Map<?, ?> map1 = ((ScoreboardAccessor) scoreboard).accessor$playerScores().remove(name);
-
-                    if (map1 != null) {
-                        scoreboard.onPlayerRemoved(name);
-                    }
-                } else if (score != null) {
-                    scoreboard.onPlayerScoreRemoved(name, objective);
-                }
-            }
-            ((SpongeScore) spongeScore).removeScoreFor(objective);
+        for (final net.minecraft.world.scores.Scoreboard scoreboard : this.scoreboards) {
+            final net.minecraft.world.scores.Objective mcObjective = scoreboard.getObjective(this.name);
+            scoreboard.resetSinglePlayerScore(holder, mcObjective);
+            ((SpongeScore) spongeScore).unregister(mcObjective);
         }
 
         this.scores.remove(spongeScore.name());
@@ -186,68 +184,52 @@ public final class SpongeObjective implements Objective {
     }
 
     @Override
-    public boolean removeScore(final Component name) {
+    public boolean removeScore(final String name) {
         final Optional<Score> score = this.findScore(name);
         return score.filter(this::removeScore).isPresent();
     }
 
     @Override
     public Set<Scoreboard> scoreboards() {
-        return (Set<Scoreboard>) (Set<?>) new HashSet<>(this.objectives.keySet());
+        return (Set<Scoreboard>) (Set<?>) new HashSet<>(this.scoreboards);
     }
 
     private void updateDisplayMode() {
-        for (final net.minecraft.world.scores.Objective objective: this.objectives.values()) {
+        for (final net.minecraft.world.scores.Scoreboard scoreboard : this.scoreboards) {
+            final net.minecraft.world.scores.Objective objective = scoreboard.getObjective(this.name);
             objective.setRenderType((ObjectiveCriteria.RenderType) (Object) this.displayMode);
         }
     }
 
     private void updateDisplayName() {
-        for (final net.minecraft.world.scores.Objective objective: this.objectives.values()) {
+        for (final net.minecraft.world.scores.Scoreboard scoreboard : this.scoreboards) {
+            final net.minecraft.world.scores.Objective objective = scoreboard.getObjective(this.name);
             objective.setDisplayName(SpongeAdventure.asVanilla(this.displayName));
         }
     }
 
-    public void updateScores(final net.minecraft.world.scores.Scoreboard scoreboard) {
-        final net.minecraft.world.scores.Objective objective = this.getObjectiveFor(scoreboard);
-
-        for (final Score score: this.scores().values()) {
-            final SpongeScore spongeScore = (SpongeScore) score;
-            this.addScoreToScoreboard(scoreboard, spongeScore.getScoreFor(objective));
-        }
+    public boolean displayAutoUpdate() {
+        return displayAutoUpdate;
     }
 
-    private void addScoreToScoreboard(final net.minecraft.world.scores.Scoreboard scoreboard, final net.minecraft.world.scores.Score score) {
-        final String name = score.getOwner();
-        final Map<net.minecraft.world.scores.Objective, net.minecraft.world.scores.Score> scoreMap = ((ScoreboardAccessor) scoreboard).accessor$playerScores()
-            .computeIfAbsent(name, k -> Maps.newHashMap());
-
-        scoreMap.put(((ScoreAccessor) score).accessor$objective(), score);
-
-        // Trigger refresh
-        ((ScoreAccessor) score).accessor$forceUpdate(true);
-        score.setScore(((ScoreAccessor) score).accessor$count());
+    public NumberFormat numberFormat() {
+        return numberFormat;
     }
 
-    public net.minecraft.world.scores.Objective getObjectiveFor(final net.minecraft.world.scores.Scoreboard scoreboard) {
-        if (this.objectives.containsKey(scoreboard)) {
-            return this.objectives.get(scoreboard);
-        }
-        final net.minecraft.world.scores.Objective objective = new net.minecraft.world.scores.Objective(scoreboard, this.name, (ObjectiveCriteria) this.criterion,
-            SpongeAdventure.asVanilla(this.displayName), (ObjectiveCriteria.RenderType) (Object) this.displayMode);
-        ((ObjectiveBridge) objective).bridge$setSpongeObjective(this);
-        this.objectives.put(scoreboard, objective);
-        return objective;
+    public void setDisplayAutoUpdate(final boolean displayAutoUpdate) {
+        this.displayAutoUpdate = displayAutoUpdate;
     }
 
-    public void removeObjectiveFor(final net.minecraft.world.scores.Scoreboard scoreboard) {
-        if (this.objectives.remove(scoreboard) == null) {
-            throw new IllegalStateException("Attempting to remove an objective without an entry!");
-        }
+    public void setNumberFormat(final NumberFormat numberFormat) {
+        this.numberFormat = numberFormat;
     }
 
-    public Collection<net.minecraft.world.scores.Objective> getObjectives() {
-        return this.objectives.values();
+    public void register(final net.minecraft.world.scores.Scoreboard scoreboard) {
+        this.scoreboards.add(scoreboard);
+    }
+
+    public void unregister(final net.minecraft.world.scores.Scoreboard scoreboard) {
+        this.scoreboards.remove(scoreboard);
     }
 
     public static final class Builder implements Objective.Builder {
