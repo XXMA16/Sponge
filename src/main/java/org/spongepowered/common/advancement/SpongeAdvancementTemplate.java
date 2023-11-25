@@ -72,7 +72,7 @@ public record SpongeAdvancementTemplate(ResourceKey key,
     public static JsonElement encode(final net.minecraft.advancements.Advancement advancement) {
         final DataResult<JsonElement> encoded = net.minecraft.advancements.Advancement.CODEC.encodeStart(JsonOps.INSTANCE, advancement);
         final JsonObject element = encoded.result().get().getAsJsonObject();
-        if (element.get("rewards").isJsonNull()) {
+        if (element.get("rewards") != null && element.get("rewards").isJsonNull()) {
             element.remove("rewards");
         }
         return element;

@@ -60,8 +60,5 @@ public final class SpongeScoreTrigger extends SimpleCriterionTrigger<SpongeScore
             return new TriggerInstance(Optional.empty(), triggerTimes);
         }
 
-        public int getTriggerTimes() {
-            return this.triggerTimes;
-        }
     }
 }

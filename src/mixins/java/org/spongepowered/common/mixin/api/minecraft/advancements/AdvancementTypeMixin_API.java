@@ -26,7 +26,6 @@ package org.spongepowered.common.mixin.api.minecraft.advancements;
 
 import net.kyori.adventure.text.format.TextColor;
 import net.minecraft.ChatFormatting;
-import net.minecraft.advancements.FrameType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.advancement.AdvancementType;
 import org.spongepowered.asm.mixin.Mixin;
@@ -35,8 +34,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.common.adventure.SpongeAdventure;
 
-@Mixin(FrameType.class)
-public abstract class FrameTypeMixin_API implements AdvancementType {
+@Mixin(net.minecraft.advancements.AdvancementType.class)
+public abstract class AdvancementTypeMixin_API implements AdvancementType {
 
     private @Nullable TextColor api$textColor;
 

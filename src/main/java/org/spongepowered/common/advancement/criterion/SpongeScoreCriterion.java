@@ -54,7 +54,7 @@ public class SpongeScoreCriterion implements ScoreAdvancementCriterion, Defaulte
             if (i == 0) {
                 if (trigger == null) {
                     mctrigger = SpongeScoreTrigger.TriggerInstance.of(goal);
-                    type = SpongeDummyTrigger.DUMMY_TRIGGER;
+                    type = SpongeScoreTrigger.SCORE_TRIGGER;
                 } else {
                     mctrigger = trigger;
                 }
