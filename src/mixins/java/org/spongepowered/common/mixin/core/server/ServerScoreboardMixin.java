@@ -35,13 +35,11 @@ import net.minecraft.server.players.PlayerList;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.scores.criteria.ObjectiveCriteria;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.scoreboard.Team;
 import org.spongepowered.api.scoreboard.criteria.Criterion;
 import org.spongepowered.api.scoreboard.displayslot.DisplaySlot;
 import org.spongepowered.api.scoreboard.objective.Objective;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -93,7 +91,8 @@ public abstract class ServerScoreboardMixin extends Scoreboard implements Server
     @Override
     public void bridge$addMCObjective(final net.minecraft.world.scores.Objective mcObjective) {
         if (!this.impl$apiCall) {
-            this.bridge$addAPIObjective(SpongeObjective.fromVanilla(mcObjective));
+            final SpongeObjective objective = SpongeObjective.fromVanilla(mcObjective);
+            objective.register(this);
         }
     }
 

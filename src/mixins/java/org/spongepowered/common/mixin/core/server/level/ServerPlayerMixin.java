@@ -76,7 +76,6 @@ import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.portal.PortalInfo;
 import net.minecraft.world.level.storage.LevelData;
 import net.minecraft.world.scores.PlayerTeam;
-import net.minecraft.world.scores.Score;
 import net.minecraft.world.scores.Team;
 import net.minecraft.world.scores.criteria.ObjectiveCriteria;
 import org.checkerframework.checker.nullness.qual.Nullable;

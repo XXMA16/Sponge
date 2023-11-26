@@ -24,7 +24,6 @@
  */
 package org.spongepowered.common.scoreboard;
 
-import com.google.common.collect.Maps;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.minecraft.network.chat.numbers.NumberFormat;
@@ -38,7 +37,6 @@ import org.spongepowered.api.scoreboard.criteria.Criterion;
 import org.spongepowered.api.scoreboard.objective.Objective;
 import org.spongepowered.api.scoreboard.objective.displaymode.ObjectiveDisplayMode;
 import org.spongepowered.api.scoreboard.objective.displaymode.ObjectiveDisplayModes;
-import org.spongepowered.common.accessor.world.scores.ScoreboardAccessor;
 import org.spongepowered.common.adventure.SpongeAdventure;
 import org.spongepowered.common.bridge.world.scores.ObjectiveBridge;
 

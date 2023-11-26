@@ -27,7 +27,6 @@ package org.spongepowered.common.bridge.server;
 import net.kyori.adventure.text.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.server.level.ServerPlayer;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.scoreboard.Team;
 import org.spongepowered.api.scoreboard.criteria.Criterion;
 import org.spongepowered.api.scoreboard.displayslot.DisplaySlot;
