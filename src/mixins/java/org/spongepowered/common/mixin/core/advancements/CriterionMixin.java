@@ -36,7 +36,9 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.common.advancement.criterion.SpongeScoreCriterion;
 import org.spongepowered.common.advancement.criterion.SpongeScoreTrigger;
 import org.spongepowered.common.bridge.advancements.CriterionBridge;
@@ -72,7 +74,9 @@ public abstract class CriterionMixin<T extends CriterionTriggerInstance> impleme
         var tmpCodec = CriterionMixin.impl$dependent(mcCodec, triggerTimesCodec, CriterionBridge::bridge$getScoreGoal, CriterionBridge::bridge$setScoreGoal);
 
         final var criterionCodec = Codec.optionalField("criterion", Codec.STRING);
-        tmpCodec = CriterionMixin.impl$dependent(tmpCodec, criterionCodec, CriterionBridge::bridge$getScoreCriterionName, CriterionBridge::bridge$setScoreCriterionName);
+        tmpCodec = CriterionMixin.impl$dependent(tmpCodec, criterionCodec,
+                bridge -> bridge.bridge$getScoreCriterion() == null ? null : bridge.bridge$getScoreCriterion().name(),
+                CriterionBridge::bridge$setScoreCriterionName);
 
         return tmpCodec;
     }
@@ -135,4 +139,20 @@ public abstract class CriterionMixin<T extends CriterionTriggerInstance> impleme
     public String bridge$getScoreCriterionName() {
         return this.impl$scoreCriterionName;
     }
+
+
+    @Inject(method = "hashCode", at = @At("RETURN"), cancellable = true)
+    public void impl$onHashCode(CallbackInfoReturnable<Integer> cir) {
+        int result = cir.getReturnValue();
+        result += 31 * result + this.bridge$getName().hashCode();
+        cir.setReturnValue(result);
+    }
+
+    @Inject(method = "equals", at = @At("RETURN"), cancellable = true)
+    public void impl$Equals(Object obj, CallbackInfoReturnable<Boolean> cir) {
+        boolean result = cir.getReturnValue();
+        result = result && ((CriterionBridge) obj).bridge$getName().equals(this.bridge$getName());
+        cir.setReturnValue(result);
+    }
+
 }
