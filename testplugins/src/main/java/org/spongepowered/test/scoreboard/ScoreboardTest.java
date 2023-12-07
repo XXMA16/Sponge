@@ -60,7 +60,7 @@ public final class ScoreboardTest {
     public CommandResult doScoreboardStuff(CommandContext ctx) {
         try {
             ctx.cause().first(ServerPlayer.class).ifPresent(player -> {
-                final Scoreboard scoreboard = Scoreboard.builder().build();
+                final Scoreboard scoreboard = player.scoreboard();
                 scoreboard.objective("testObjective").ifPresentOrElse(o -> {
                     scoreboard.removeObjective(o);
                     ctx.sendMessage(Component.text("Objective removed"));

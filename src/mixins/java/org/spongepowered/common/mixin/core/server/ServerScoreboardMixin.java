@@ -209,11 +209,6 @@ public abstract class ServerScoreboardMixin extends Scoreboard implements Server
     }
 
     @Override
-    public void removeObjective(final net.minecraft.world.scores.Objective objective) {
-        this.bridge$removeAPIObjective(((ObjectiveBridge) objective).bridge$getSpongeObjective());
-    }
-
-    @Override
     public void removePlayerTeam(final PlayerTeam team) {
         super.removePlayerTeam(team);
         ((PlayerTeamAccessor) team).accessor$scoreboard(null);
