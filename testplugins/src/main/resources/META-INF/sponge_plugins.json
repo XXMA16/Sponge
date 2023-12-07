@@ -291,6 +291,12 @@
             "name": "Sign Test",
             "entrypoint": "org.spongepowered.test.sign.SignTest",
             "description": "Testing Sign Changes"
+        },
+        {
+            "id": "customregistrytest",
+            "name": "Custom Registry Test",
+            "entrypoint": "org.spongepowered.test.customregistry.CustomRegistryTest",
+            "description": "Testing Custom Registry"
         }
     ]
 }
