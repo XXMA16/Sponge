@@ -297,6 +297,12 @@
             "name": "Custom Registry Test",
             "entrypoint": "org.spongepowered.test.customregistry.CustomRegistryTest",
             "description": "Testing Custom Registry"
+        },
+        {
+            "id": "scoreboardtest",
+            "name": "Scoreboard Test",
+            "entrypoint": "org.spongepowered.test.scoreboard.ScoreboardTest",
+            "description": "Testing Custom Registry"
         }
     ]
 }
